@@ -3,16 +3,21 @@
 
 #include <MPU6050.h>
 #include <LiquidCrystal_I2C.h>
+#include <PulseSensorPlayground.h> 
+
+#define USE_ARDUINO_INTERRUPTS false // Set-up low-level interrupts for most acurate BPM math.
 
 #define BUZZER 26
 #define RED_LED 25
-#define ALC_SENSOR 15
-#define PULSE_SENSOR 4
+#define ALC_SENSOR 13
+#define PULSE_SENSOR 33
 #define BUZZER_CHANNEL 0
 
 #define FALL_THRESHOLD 300000
 #define SAMPLE_INTERVAL 10
-#define BEEP_DURATION 5000 // 5 seconds
+#define BEEP_DURATION 5000 
+#define BAC_THRESHOLD 3
+#define PULSE_SENSOR_THRESHOLD 550
 
 
 // I2C Connections
@@ -20,6 +25,10 @@ MPU6050 fallDetectorMPU(0x69);
 
 // set the LCD address to 0x27 for a 16 chars and 2 line display
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+PulseSensorPlayground pulseSensor; 
+
+int pulse_analog_signal = 0;                       
 
 float prevAccX = 0, prevAccY = 0, prevAccZ = 0;
 
@@ -77,6 +86,18 @@ void pin_init()
 	digitalWrite(RED_LED, LOW);
 
     delay(20000);
+}
+
+void pulse_sensor_setup()
+{
+	pulseSensor.analogInput(PULSE_SENSOR);
+	pulseSensor.blinkOnPulse(RED_LED); 
+	pulseSensor.setThreshold(PULSE_SENSOR_THRESHOLD);
+
+	if (pulseSensor.begin())
+	{
+		Serial.println("HeartBeat Sensor found.");
+	}
 }
 
 void print_lcd(String text, bool thisBool, float mgL)
@@ -163,10 +184,10 @@ void checkAlcohol()
         delay(10);
     }
 	// adcValue = analogRead(ALC_SENSOR);
-    val = (adcValue / 5) * (5.0 / 4096.0);
+    val = (adcValue / 5) * (5.0 / 1024.0);
     mgL = 0.67 * val;
 
-    if (mgL > 0.3)
+    if (mgL > BAC_THRESHOLD)
     {
         // isDrunk = true;
         // digitalWrite(BUZZER, HIGH);
@@ -189,13 +210,31 @@ void checkAlcohol()
 	playBuzzer(0, LOW);
 }
 
+void checkPulse()
+{
+	pulse_analog_signal = analogRead(PULSE_SENSOR);
+	Serial.print(">Signal:");
+	Serial.print(pulse_analog_signal); // Send the Signal value to Serial Plotter.
+	Serial.println();
+
+	if (pulseSensor.sawStartOfBeat())
+	{
+		int myBPM = pulseSensor.getBeatsPerMinute();
+
+		Serial.print("BPM: ");
+		Serial.println(myBPM);
+	}
+}
+
 void setup()
 {
 	Serial.begin(115200);
 	Wire.begin();
+	analogReadResolution(10);
 
 	lcd_init();
 	pin_init();
+	pulse_sensor_setup();
 
 	// Initialize MPU6050
     fallDetectorMPU.initialize();
@@ -205,7 +244,8 @@ void setup()
 void loop()
 {
 	checkFall();
-    delay(100);
+    delay(10);
 	checkAlcohol();
-	delay(100);
+	delay(10);
+	checkPulse();
 }
