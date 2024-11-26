@@ -1,51 +1,41 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <Arduino.h>
 
 // Download the LiquidCrystal_I2C library from https://github.com/Freenove/Freenove_LCD_Module/blob/main/Freenove_LCD_Module_for_ESP32/C/Libraries/LiquidCrystal_I2C.zip and add the extracted folder to the libdeps folder in .pio folder of the project.
 
 // I2C Connections
 LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-#define GAS_SENSOR A0
-#define GREEN_LED 8
-#define RED_LED 9
+#define GAS_SENSOR 13
+#define GREEN_LED 18
+#define RED_LED 19
 #define BUZZER 13
 
 float adcValue = 0, val = 0, mgL = 0;
 bool isDrunk = false;
 
-void printLCD(float mgL, bool isDrunk)
+void print_lcd(float mgl)
 {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(" BAC: ");
-    lcd.print(mgL, 3);
-    lcd.print("mg/L   ");
-    lcd.setCursor(0, 1);
-    if (isDrunk)
-    {
-        lcd.print("      Drunk     ");
-    }
-    else
-    {
-        lcd.print("     Normal    ");
-    }
+//   Serial.println(mgL);
+  lcd.clear();
+  lcd.print(mgL);
 }
+
 
 void setup()
 {
+    Serial.begin(9600);
+    Wire.begin();
     pinMode(GAS_SENSOR, INPUT);
     pinMode(RED_LED, OUTPUT);   
     pinMode(GREEN_LED, OUTPUT); 
     pinMode(BUZZER, OUTPUT);    
 
-    lcd.begin(16, 2);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("   Welcome To   ");
-    lcd.setCursor(0, 1);
-    lcd.print("Alcohol Detector");
-    delay(2000);
+    lcd.init();
+    lcd.backlight();
+    lcd.cursor();
+    delay(20000);
     lcd.clear();
 }
 
@@ -58,6 +48,7 @@ void loop()
         adcValue += analogRead(GAS_SENSOR);
         delay(10);
     }
+    Serial.println(adcValue);
     val = (adcValue / 10) * (5.0 / 1024.0);
     mgL = 0.67 * val;
 
@@ -76,7 +67,10 @@ void loop()
         digitalWrite(GREEN_LED, HIGH); // Turn LED on.
         digitalWrite(RED_LED, LOW);    // Turn LED off.
     }
-    printLCD(mgL, isDrunk);
+    print_lcd(mgL);
+    Serial.print("BAC: ");
+    Serial.print(mgL, 3);
+    Serial.println("mg/L");
     digitalWrite(BUZZER, LOW);
     delay(100);
 }

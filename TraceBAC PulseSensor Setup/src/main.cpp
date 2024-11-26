@@ -34,9 +34,9 @@ void loop()
   // Why? Because the PulseSensor Library expects a 0 - 1023 input. (Maybe)
   Signal = analogRead(PULSE) / 4;
 
-  // Serial.print(">Signal:");
-  // Serial.print(Signal); // Send the Signal value to Serial Plotter.
-  // Serial.println();
+  Serial.print(">Signal:");
+  Serial.print(Signal); // Send the Signal value to Serial Plotter.
+  Serial.println();
 
   if (pulseSensor.sawStartOfBeat())
   {                                               
