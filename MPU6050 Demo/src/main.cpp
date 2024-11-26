@@ -2,10 +2,10 @@
 #include <MPU6050.h>
 #include "time.h"
 
-#define BUZZER_PIN 14
+#define BUZZER_PIN 26
 #define BUZZER_CHANNEL 0
 #define BEEP_DURATION 5000 // 5 seconds
-#define PIN_LED 2
+#define PIN_LED 25
 
 const int sampleInterval = 10;   // Interval in milliseconds between readings
 const float fallThreshold = 300000; // Adjust to suit your needs (in m/s^3)
@@ -17,7 +17,7 @@ struct Button {
     bool pressed;
 };
 
-Button button1 = {12, 0, false};
+Button button1 = {5, 0, false};
 
 MPU6050 mpu;
 unsigned long button_time = 0;  
@@ -48,8 +48,9 @@ void setup() {
     attachInterrupt(button1.PIN, isr, FALLING);
 
     // Configure buzzer and LED
-    // ledcSetup(BUZZER_CHANNEL, 2000, 16); // 2 kHz tone
-    // ledcAttachPin(BUZZER_PIN, BUZZER_CHANNEL);
+    ledcSetup(BUZZER_CHANNEL, 2000, 16); // 2 kHz tone
+    ledcAttachPin(BUZZER_PIN, BUZZER_CHANNEL);
+
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, LOW);
 }
@@ -87,8 +88,8 @@ void loop() {
         // Check for fall
         if (jerkMagnitude > fallThreshold) {
             Serial.println("Fall detected!");
-            // ledcWriteTone(BUZZER_CHANNEL, 5000); // Play tone
-            // digitalWrite(PIN_LED, HIGH); // Turn on LED
+            ledcWriteTone(BUZZER_CHANNEL, 5000); // Play tone
+            digitalWrite(PIN_LED, HIGH); // Turn on LED
             delayStartTime = millis();
 
             // Wait for button press or timeout
@@ -100,8 +101,8 @@ void loop() {
                 }
             }
 
-            // ledcWrite(BUZZER_CHANNEL, 0); // Stop buzzer
-            // digitalWrite(PIN_LED, LOW); // Turn off LED
+            ledcWrite(BUZZER_CHANNEL, 0); // Stop buzzer
+            digitalWrite(PIN_LED, LOW); // Turn off LED
         }
     }
 

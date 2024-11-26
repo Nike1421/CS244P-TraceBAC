@@ -19,7 +19,7 @@ void print_lcd(float mgl)
 {
 //   Serial.println(mgL);
   lcd.clear();
-  lcd.print(mgL);
+  lcd.print(mgl);
 }
 
 
@@ -37,18 +37,22 @@ void setup()
     lcd.cursor();
     delay(20000);
     lcd.clear();
+
+    analogReadResolution(10);
 }
 
 void loop()
 {
-
+    float vak = 0;
     adcValue = 0;
     for (int i = 0; i < 10; i++)
     {
-        adcValue += analogRead(GAS_SENSOR);
+        vak = analogRead(GAS_SENSOR) / 10.0;
+        adcValue += vak;
         delay(10);
     }
-    Serial.println(adcValue);
+    Serial.println(vak);
+    
     val = (adcValue / 10) * (5.0 / 1024.0);
     mgL = 0.67 * val;
 
