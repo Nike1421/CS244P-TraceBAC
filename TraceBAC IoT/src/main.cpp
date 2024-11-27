@@ -28,7 +28,9 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 PulseSensorPlayground pulseSensor; 
 
-int pulse_analog_signal = 0;                       
+int pulse_analog_signal = 0;    
+
+int my_bpm = 0;
 
 float prevAccX = 0, prevAccY = 0, prevAccZ = 0;
 
@@ -100,12 +102,18 @@ void pulse_sensor_setup()
 	}
 }
 
-void print_lcd(String text, bool thisBool, float mgL)
+void print_lcd(int bpm, float jerk, float mgL)
 {
-	// TODO: Add the logic to print the text on the LCD.
 	lcd.clear();
-	lcd.print(text);
+	lcd.setCursor(0, 0);
+	lcd.print("BPM:");
+	lcd.print(bpm);
+	lcd.setCursor(8, 0);
+	lcd.print("BAC:");
 	lcd.print(mgL);
+	lcd.setCursor(0, 1);
+	lcd.print("Jerk:");
+	lcd.print(jerk);
 }
 
 void playBuzzer(int buzzerFrequency, uint8_t ledState)
@@ -203,7 +211,6 @@ void checkAlcohol()
         // digitalWrite(RED_LED, LOW);    // Turn LED off.
 		playBuzzer(0, LOW);
     }
-    print_lcd("BAC: ", false, mgL);
     Serial.print("BAC: ");
     Serial.print(mgL, 3);
     Serial.println("mg/L");
@@ -219,10 +226,10 @@ void checkPulse()
 
 	if (pulseSensor.sawStartOfBeat())
 	{
-		int myBPM = pulseSensor.getBeatsPerMinute();
+		my_bpm = pulseSensor.getBeatsPerMinute();
 
 		Serial.print("BPM: ");
-		Serial.println(myBPM);
+		Serial.println(my_bpm);
 	}
 }
 
@@ -248,4 +255,5 @@ void loop()
 	checkAlcohol();
 	delay(10);
 	checkPulse();
+    print_lcd(my_bpm, jerkMagnitude, mgL);
 }
