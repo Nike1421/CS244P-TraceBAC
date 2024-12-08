@@ -14,9 +14,10 @@
         // Arrays to hold sensor data for plotting
         let bpmData = [];
         let bacData = [];
-        let accelXData = [];
-        let accelYData = [];
-        let accelZData = [];
+        let jerkData = [];
+        // let accelXData = [];
+        // let accelYData = [];
+        // let accelZData = [];
         let labels = [];
 
         const ctx = document.getElementById('myChart').getContext('2d');
@@ -42,31 +43,41 @@
                         fill: false
                     },
                     {
-                        label: 'Accel X (Movement X)',
-                        data: accelXData,
+                        label: 'Accel Jerk',
+                        data: jerkData,
                         borderColor: 'rgba(75, 192, 192, 1)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         fill: false
                     },
-                    {
-                        label: 'Accel Y (Movement Y)',
-                        data: accelYData,
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                        fill: false
-                    },
-                    {
-                        label: 'Accel Z (Movement Z)',
-                        data: accelZData,
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                        fill: false
-                    }
+                    // {
+                    //     label: 'Accel X (Movement X)',
+                    //     data: accelXData,
+                    //     borderColor: 'rgba(75, 192, 192, 1)',
+                    //     backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    //     fill: false
+                    // },
+                    // {
+                    //     label: 'Accel Y (Movement Y)',
+                    //     data: accelYData,
+                    //     borderColor: 'rgba(153, 102, 255, 1)',
+                    //     backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    //     fill: false
+                    // },
+                    // {
+                    //     label: 'Accel Z (Movement Z)',
+                    //     data: accelZData,
+                    //     borderColor: 'rgba(255, 159, 64, 1)',
+                    //     backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    //     fill: false
+                    // }
                 ]
             },
             options: {
                 scales: {
                     y: {
+                        beginAtZero: true
+                    },
+                    x: {
                         beginAtZero: true
                     }
                 }
@@ -75,7 +86,7 @@
 
         // Function to fetch data from Flask API every 2 seconds (make match delay of arduino data)
         function fetchData() {
-            fetch('http://18.117.11.134:5000/api/data')  // Modify this URL if needed
+            fetch('http://18.218.196.220:5000/api/data')  // Modify this URL if needed
                 .then(response => response.json())
                 .then(data => {
                     // Log the fetched data for debugging
@@ -92,18 +103,20 @@
                     labels.push(timestamp);
                     bpmData.push(data.bpm);
                     bacData.push(data.bac);
-                    accelXData.push(data.accel_x);
-                    accelYData.push(data.accel_y);
-                    accelZData.push(data.accel_z);
+                    jerkData.push(data.jerk);
+                    // accelXData.push(data.accel_x);
+                    // accelYData.push(data.accel_y);
+                    // accelZData.push(data.accel_z);
 
                     // Keep only the last 30 data points for each dataset
                     if (labels.length > 30) {
                         labels.shift();
                         bpmData.shift();
                         bacData.shift();
-                        accelXData.shift();
-                        accelYData.shift();
-                        accelZData.shift();
+                        jerkData.shift();
+                        // accelXData.shift();
+                        // accelYData.shift();
+                        // accelZData.shift();
                     }
 
                     // Update the chart
@@ -112,7 +125,7 @@
                 .catch(error => console.error('Error fetching data:', error));
         }
 
-        setInterval(fetchData, 2000);  // Refresh every 2 seconds (make this match the delay with data from the arduino)
+        setInterval(fetchData, 1000);  // Refresh every 2 seconds (make this match the delay with data from the arduino)
     </script>
 </body>
 </html>
