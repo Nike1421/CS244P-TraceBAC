@@ -86,7 +86,7 @@ WiFiUDP udp;
 String ssid = "OM";
 String pass = "OMNAIK123";
 const int flask_server_port = 5000;
-const char *flask_server_ip = "3.145.120.107";
+const char *flask_server_ip = "18.218.196.220";
 
 const int kNetworkDelay = 1000;
 const int kNetworkTimeout = 30 * 1000;
@@ -231,6 +231,7 @@ void checkFall()
 		// Check for fall
 		if (currentJerkMagnitude > FALL_THRESHOLD)
 		{
+			currentJerkMagnitude = 0;
 			Serial.println("Fall detected!");
 
 			print_lcd("FALL DETECTED!", "PRESS BUTTON!");
@@ -248,6 +249,7 @@ void checkFall()
 					fallCheckButton.pressed = false;
 					print_lcd("BUTTON PRESSED", "BUZZER STOPPED");
 					// Serial.println("Buzzer stopped by button press.");
+					currentJerkMagnitude = 0;
 					break;
 				}
 			}
@@ -274,16 +276,31 @@ void checkAlcohol()
 	val = (adcValue / 5) * (5.0 / 1024.0);
 	mgL = 0.67 * val;
 
-	if (mgL > BAC_THRESHOLD)
+	if (mgL > 3.0)
 	{
-		print_lcd("HIGH BAC DETECTED!", "PRESS BUTTON!");
+		Serial.println("BAC Exceeded!");
+
+		print_lcd("BAC EXCEEDED!", "PRESS BUTTON!");
+
+		// Play Buzzer and Set LED to HIGH
 		playBuzzer(5000, HIGH);
-	}
-	if (fallCheckButton.pressed)
-	{
-		fallCheckButton.pressed = false;
+
+		delayStartTime = millis();
+
+		// Wait for button press or timeout
+		while (millis() - delayStartTime < 5000)
+		{
+			if (fallCheckButton.pressed)
+			{
+				fallCheckButton.pressed = false;
+				print_lcd("BUTTON PRESSED", "BUZZER STOPPED");
+				break;
+			}
+		}
+		lcd_init();
+
+		// Stop Buzzer and Set LED to LOW
 		playBuzzer(0, LOW);
-		print_lcd("BUTTON PRESSED", "BUZZER STOPPED");
 	}
 
 	// Send BAC to Serial Plotter
@@ -396,7 +413,7 @@ void server_request_task(void *parameter)
 	while (true)
 	{
 		sendPOSTRequest();
-		vTaskDelay(500 / portTICK_PERIOD_MS); // Run every 5 seconds
+		vTaskDelay(250 / portTICK_PERIOD_MS); // Run every 5 seconds
 	}
 }
 
@@ -416,7 +433,7 @@ void setup()
 	pulse_sensor_setup();
 	accelerometer_setup();
 
-	// xTaskCreatePinnedToCore(server_request_task, "HTTP_Request_Task", 10000, NULL, 1, NULL, 0);
+	xTaskCreatePinnedToCore(server_request_task, "HTTP_Request_Task", 10000, NULL, 1, NULL, 0);
 }
 
 void loop()
